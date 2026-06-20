@@ -10,6 +10,9 @@ Sistema multiagente de recomendação de ações brasileiras (COMPRAR / VENDER /
 - Gradio — interface conversacional
 - pytest + ruff + mypy — testes, lint e tipos
 
+## Ambiente
+- Windows 11, PowerShell — usar comandos PowerShell, não bash
+
 ## Estrutura
 - `src/quantumfinance/data/` — coleta de preços e notícias
 - `src/quantumfinance/features/` — indicadores técnicos e sentimento

@@ -1,0 +1,41 @@
+[project]
+name = "quantumfinance"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=0.2.0",
+    "langchain>=0.3.0",
+    "langchain-openai>=0.2.0",
+    "yfinance>=0.2.0",
+    "feedparser>=6.0.0",
+    "pandas-ta>=0.3.14b0",
+    "transformers>=4.40.0",
+    "torch>=2.0.0",
+    "gradio>=4.0.0",
+    "pandas>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "matplotlib>=3.8.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "mypy>=1.0.0",
+    "ruff>=0.4.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 88
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+ignore_missing_imports = true

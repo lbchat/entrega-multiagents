@@ -4,8 +4,8 @@
 
 ## Etapas
 
-- [ ] **Etapa 0** — Fundação: repositório, ambiente, estrutura de pastas, .env.example, README inicial
-- [ ] **Etapa 1** — Pipeline de mercado: yfinance + pandas-ta funcionando para PETR4, validado em notebook
+- [x] **Etapa 0** — Fundação: repositório, ambiente, estrutura de pastas, .env.example, README inicial
+- [x] **Etapa 1** — Pipeline de mercado: yfinance + pandas-ta funcionando para PETR4, validado em notebook
 - [ ] **Etapa 2** — Pipeline de sentimento: feedparser + FinBERT-PT-BR funcionando para PETR4, validado em notebook
 - [ ] **Etapa 3** — Agente MVP: 3 tools + ReAct + recomendação completa para PETR4
 - [ ] **Etapa 4** — Expansão: agente funcionando para VALE3, BBAS3 e ITUB4
@@ -26,3 +26,6 @@
 ## Notas e blockers
 
 <!-- Registre aqui impedimentos, dúvidas abertas ou decisões tomadas durante a implementação -->
+
+- O AVG Antivirus faz inspeção HTTPS (MITM) e bloqueia chamadas SSL do Python com `CERTIFICATE_VERIFY_FAILED`. Corrigido instalando `pip-system-certs` no `.venv` (faz o Python confiar no certificado store do Windows). Se reinstalar o venv do zero, repetir esse passo.
+- `yfinance` usa `curl_cffi` por baixo dos panos, que tem seu próprio bundle de certificados e não é coberto pelo `pip-system-certs`. Corrigido exportando o certificado raiz do AVG (`Cert:\LocalMachine\Root`, assunto "AVG Web/Mail Shield Root") e anexando ao `cacert.pem` do `certifi` dentro do `.venv`. Se reinstalar o venv do zero, repetir esse passo também.
