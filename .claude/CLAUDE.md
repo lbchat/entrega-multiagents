@@ -40,6 +40,7 @@ Sistema multiagente de recomendação de ações brasileiras (COMPRAR / VENDER /
 - Nunca hardcode API keys — use `.env` via python-dotenv
 - Nunca coloque lógica de negócio nos agentes — fica nas tools e em `features/`
 - Nunca embaralhe dados no backtest — sempre ordem temporal
+- Nunca use model_dump() simples em RecommendationOutput — sempre model_dump(mode="json") para garantir serialização correta do enum Recommendation.
 
 ## Referências
 - Arquitetura e decisões: `docs/decisions.md`

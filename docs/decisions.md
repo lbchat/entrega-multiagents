@@ -3,11 +3,17 @@
 ## Arquitetura de agentes
 **Decisão:** 3 agentes especializados + orquestrador (MarketAgent, SentimentAgent, DecisionAgent).
 **Motivo:** mínimo funcional que atende os requisitos da disciplina. Cada agente tem responsabilidade única e clara.
+**Atenção:** `create_react_agent` do LangGraph instalado (1.2.6) não aceita mais o parâmetro `state_modifier` usado em versões antigas — o nome correto é `prompt`. Aplicado nos três agentes.
 
 ## Coordenação do orquestrador
 **Decisão:** padrão híbrido — pipeline fixo para recomendação completa, roteamento dinâmico para perguntas pontuais.
 **Motivo:** o pipeline fixo garante confiabilidade no caso principal. O roteamento torna a interface conversacional fluida e eficiente.
 **Implementação:** primeiro nó do grafo LangGraph é um nó de roteamento condicional que classifica a intenção da pergunta.
+
+## Pipeline determinístico no fluxo de recomendação
+**Decisão:** as etapas `pipeline_market`, `pipeline_sentiment` e `pipeline_decision` do orquestrador chamam as tools diretamente em Python, sem passar pelo ReAct do LLM. O LLM só entra na etapa final para narrar o resultado.
+**Motivo:** confiabilidade garantida no caminho principal — elimina o risco de o modelo pular uma etapa ou chamar a tool errada.
+**Trade-off aceito:** o fluxo de recomendação é menos "agêntico" no sentido puro, compensado pelo roteamento dinâmico genuíno nas perguntas pontuais (`market_node`, `sentiment_node`).
 
 ## LLM principal
 **Decisão:** Qwen 2.5 7B Instruct via DeepInfra API.
@@ -30,6 +36,7 @@
 **Motivo:** JSON garante consistência para persistência e backtest. Texto natural melhora a experiência na demo.
 **Campos obrigatórios do JSON:** ticker, date, recommendation, confidence, rsi, macd_signal, sentiment_score, sentiment_label, top_headlines, reasoning.
 **Enum de recomendação:** sempre validar contra `Recommendation(COMPRAR, VENDER, AGUARDAR)` antes de persistir.
+**Atenção:** `model_dump()` simples retorna o membro do enum (`<Recommendation.COMPRAR: 'COMPRAR'>`) em vez da string `"COMPRAR"`, corrompendo a escrita em CSV. Sempre usar `model_dump(mode="json")` em `RecommendationOutput`.
 
 ## Biblioteca de indicadores técnicos
 **Decisão:** pandas-ta.
