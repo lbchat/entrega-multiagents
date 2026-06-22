@@ -8,7 +8,7 @@
 - [x] **Etapa 1** — Pipeline de mercado: yfinance + pandas-ta funcionando para PETR4, validado em notebook
 - [x] **Etapa 2** — Pipeline de sentimento: feedparser + FinBERT-PT-BR funcionando para PETR4, validado em notebook
 - [x] **Etapa 3** — Agente MVP: 3 tools + ReAct + recomendação completa para PETR4
-- [ ] **Etapa 4** — Expansão: agente funcionando para VALE3, BBAS3 e ITUB4
+- [x] **Etapa 4** — Expansão: agente funcionando para VALE3, BBAS3 e ITUB4
 - [ ] **Etapa 5** — Interface Gradio: demo conversacional navegável
 - [ ] **Etapa 6** — Backtest: simulação histórica + comparação vs. buy-and-hold e Ibovespa
 - [ ] **Etapa 7** — Entrega: README final, diagrama de arquitetura, documentação de limitações
@@ -52,3 +52,4 @@ Agente que recebe um ticker e decide autonomamente quais dimensões contextuais 
 ## Pendências antes da Etapa 6
 
 - O feed RSS `https://valor.globo.com/rss/home/` (em `RSS_FEEDS`, `news_data.py`) retorna 0 itens (`feedparser` não lança erro, só volta vazio). Os outros dois feeds (InfoMoney, Money Times) funcionam normalmente. Isso reduz a base de notícias disponível para sentimento — investigar antes do backtest da Etapa 6, já que mais histórico de notícias pode impactar a qualidade do sinal de sentimento.
+- `fetch_news` casa as keywords contra título+resumo combinados (`TICKER_KEYWORDS`, `news_data.py`), mas `top_headlines` só exibe o título — então a manchete mostrada ao usuário às vezes parece não relacionada ao ticker, quando na verdade o termo que deu o match estava no resumo. Melhoria sugerida: exibir também o trecho do resumo que gerou o match junto com o título, para tornar o motivo do match auditável.

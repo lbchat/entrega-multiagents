@@ -3,6 +3,7 @@
 import pytest
 from quantumfinance.data.market_data import fetch_ohlcv
 from quantumfinance.features.technical import calculate_indicators
+from quantumfinance.universe import TICKERS
 
 
 @pytest.fixture(scope="module")
@@ -43,3 +44,13 @@ def test_fetch_ohlcv_invalid_ticker_raises():
     """Valida que ticker inválido levanta exceção tratada."""
     with pytest.raises(RuntimeError):
         fetch_ohlcv("TICKER_INEXISTENTE_XYZ")
+
+
+def test_market_features_returns_dict_for_all_tickers():
+    """Valida que get_market_features retorna dict para todos os tickers."""
+    from quantumfinance.tools.market_tools import get_market_features
+    for ticker in TICKERS:
+        result = get_market_features.invoke({"ticker": ticker})
+        assert isinstance(result, dict), f"Falhou para {ticker}"
+        assert "rsi" in result, f"RSI ausente para {ticker}"
+        assert "close" in result, f"Preço ausente para {ticker}"
