@@ -7,19 +7,12 @@ from quantumfinance.tools.market_tools import get_market_features
 from quantumfinance.tools.news_tools import get_sentiment_features
 
 
-@tool
-def generate_recommendation(ticker: str) -> dict:
-    """Gera recomendação fundamentada de COMPRAR, VENDER ou AGUARDAR para o ticker informado."""
-    market = get_market_features.invoke({"ticker": ticker})
-    sentiment = get_sentiment_features.invoke({"ticker": ticker})
-
-    rsi = market.get("rsi", 50.0)
-    macd_signal = market.get("macd_signal", "neutro")
-    sentiment_score = sentiment.get("sentiment_score", 0.0)
-    sentiment_label = sentiment.get("sentiment_label", "NEUTRO")
-    top_headlines = sentiment.get("top_headlines", [])
-
-    # Lógica de decisão baseada em regras interpretáveis
+def apply_decision_rules(
+    rsi: float,
+    macd_signal: str,
+    sentiment_score: float = 0.5,
+) -> dict:
+    """Aplica as regras de decisão (RSI, MACD, sentimento) e retorna recomendação, confiança e justificativa."""
     bullish_signals = 0
     bearish_signals = 0
 
@@ -59,21 +52,42 @@ def generate_recommendation(ticker: str) -> dict:
     reasoning = (
         f"RSI em {rsi:.1f} ({'sobrevenda' if rsi < 30 else 'sobrecompra' if rsi > 70 else 'neutro'}). "
         f"MACD {macd_signal}. "
-        f"Sentimento {sentiment_label} (score: {sentiment_score:.2f}). "
+        f"Sentimento (score: {sentiment_score:.2f}). "
         f"Sinais altistas: {bullish_signals}, baixistas: {bearish_signals}."
     )
+
+    return {
+        "recommendation": recommendation.value,
+        "confidence": confidence,
+        "reasoning": reasoning,
+    }
+
+
+@tool
+def generate_recommendation(ticker: str) -> dict:
+    """Gera recomendação fundamentada de COMPRAR, VENDER ou AGUARDAR para o ticker informado."""
+    market = get_market_features.invoke({"ticker": ticker})
+    sentiment = get_sentiment_features.invoke({"ticker": ticker})
+
+    rsi = market.get("rsi", 50.0)
+    macd_signal = market.get("macd_signal", "neutro")
+    sentiment_score = sentiment.get("sentiment_score", 0.0)
+    sentiment_label = sentiment.get("sentiment_label", "NEUTRO")
+    top_headlines = sentiment.get("top_headlines", [])
+
+    decision = apply_decision_rules(rsi=rsi, macd_signal=macd_signal, sentiment_score=sentiment_score)
 
     output = RecommendationOutput(
         ticker=ticker,
         date=date.today().isoformat(),
-        recommendation=recommendation,
-        confidence=confidence,
+        recommendation=Recommendation(decision["recommendation"]),
+        confidence=decision["confidence"],
         rsi=rsi,
         macd_signal=macd_signal,
         sentiment_score=sentiment_score,
         sentiment_label=sentiment_label,
         top_headlines=top_headlines[:3],
-        reasoning=reasoning,
+        reasoning=decision["reasoning"],
     )
 
     return output.model_dump(mode="json")
