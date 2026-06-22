@@ -67,7 +67,7 @@ def build_market_agent():
     return create_react_agent(
         model=get_llm(),
         tools=[get_market_features],
-        state_modifier="Você é o MarketAgent. Sua única responsabilidade é coletar dados de mercado e calcular indicadores técnicos. Nunca emita recomendações."
+        prompt="Você é o MarketAgent. Sua única responsabilidade é coletar dados de mercado e calcular indicadores técnicos. Nunca emita recomendações."
     )
 ```
 
