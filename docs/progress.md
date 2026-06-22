@@ -9,7 +9,7 @@
 - [x] **Etapa 2** — Pipeline de sentimento: feedparser + FinBERT-PT-BR funcionando para PETR4, validado em notebook
 - [x] **Etapa 3** — Agente MVP: 3 tools + ReAct + recomendação completa para PETR4
 - [x] **Etapa 4** — Expansão: agente funcionando para VALE3, BBAS3 e ITUB4
-- [ ] **Etapa 5** — Interface Gradio: demo conversacional navegável
+- [x] **Etapa 5** — Interface Gradio: demo conversacional navegável
 - [ ] **Etapa 6** — Backtest: simulação histórica + comparação vs. buy-and-hold e Ibovespa
 - [ ] **Etapa 7** — Entrega: README final, diagrama de arquitetura, documentação de limitações
 
@@ -50,6 +50,8 @@ Agente que recebe um ticker e decide autonomamente quais dimensões contextuais 
 - O pipeline fixo de recomendação (`pipeline_market` → `pipeline_sentiment` → `pipeline_decision`) não pode encadear 3 agentes ReAct passando a conversa acumulada — o LLM de cada etapa, vendo a conversa já "parecendo respondida" pela etapa anterior, frequentemente decide não chamar sua tool (ou recusa, ou retorna vazio), e o `DecisionAgent` chegava a alucinar uma recomendação em texto livre sem nunca chamar `generate_recommendation`, fazendo o CSV nunca ser escrito. Resolvido chamando as tools diretamente em Python nessas 3 etapas (determinístico), com um `PipelineState` carregando `ticker`/`market_features`/`sentiment_features` entre elas; o LLM (`DecisionAgent`) só entra no final para narrar o resultado já calculado. Os nós de roteamento dinâmico (`market_node`, `sentiment_node`) continuam usando os agentes ReAct normalmente — funcionam bem porque recebem só a pergunta original, sem histórico acumulado de outras etapas.
 - `pandas-ta` 0.4.71b0 (versão instalada) gera nomes de coluna das Bandas de Bollinger com sufixo duplicado: `BBU_20_2.0_2.0`/`BBL_20_2.0_2.0`, não `BBU_20_2.0`/`BBL_20_2.0` como em versões mais antigas. Corrigido em `technical.py`.
 - Caracteres Unicode `✓`/`✗` em `print()` quebram o console do PowerShell (codepage cp1252, não UTF-8) com `UnicodeEncodeError`, interrompendo o script no meio da execução. Substituídos por `OK:`/`FALHOU:` em ASCII em `scripts/test_expansion.py`.
+- `gr.Chatbot` na versão instalada do Gradio (6.19.0) não aceita mais o parâmetro `type="messages"` (agora é o único formato, sem opção). Removido do construtor. O valor das mensagens continua sendo `{"role": ..., "content": ...}`.
+- Para validar a interface Gradio com Playwright (browser real), o downloader de browsers do Playwright usa Node.js internamente e bate no mesmo problema de SSL do AVG, mas por um mecanismo diferente do Python (`certifi`) e do `yfinance` (`curl_cffi`). Corrigido setando `NODE_OPTIONS=--use-system-ca` antes de rodar `playwright install chromium`, o que faz o Node confiar no certificado store do Windows.
 
 ## Pendências antes da Etapa 6
 
