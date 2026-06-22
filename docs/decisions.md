@@ -38,6 +38,11 @@
 **Enum de recomendação:** sempre validar contra `Recommendation(COMPRAR, VENDER, AGUARDAR)` antes de persistir.
 **Atenção:** `model_dump()` simples retorna o membro do enum (`<Recommendation.COMPRAR: 'COMPRAR'>`) em vez da string `"COMPRAR"`, corrompendo a escrita em CSV. Sempre usar `model_dump(mode="json")` em `RecommendationOutput`.
 
+## Backtest sem look-ahead bias
+**Decisão:** o backtest (`run_backtest`) não chama o LLM nem o FinBERT — usa apenas indicadores técnicos via função pura (`apply_decision_rules`) e sentimento fixo neutro (`sentiment_score=0.5`) para todas as datas.
+**Motivo:** narrativa em linguagem natural não agrega valor num loop histórico de centenas de dias; sentimento real de notícias não está disponível para datas passadas via RSS (só existe para o presente).
+**Atenção (look-ahead bias):** `end=` no `yf.download` é **exclusivo** (confirmado empiricamente, não documentado claramente pelo yfinance) — `yf.download(ticker, end=date)` retorna dados só até o pregão **anterior** a `date`, nunca incluindo `date`. Por isso `get_historical_features(ticker, date)` (`targets.py`) calcula os indicadores com o fechamento do último pregão antes de `date`, nunca o de `date` em si — uma proteção contra look-ahead bias ainda mais conservadora que o mínimo exigido (nunca usa nem o próprio dia da decisão). Já `start=` é inclusivo (confirmado também) — por isso `get_forward_return`/`get_ibovespa_return` usam `start=date`, garantindo que o retorno futuro seja medido a partir do preço real de `date`, o dia da decisão.
+
 ## Biblioteca de indicadores técnicos
 **Decisão:** pandas-ta.
 **Motivo:** TA-Lib tem dependência nativa que causa problemas de instalação em Windows. pandas-ta é pure Python.
