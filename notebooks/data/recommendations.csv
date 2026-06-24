@@ -1,0 +1,2 @@
+ticker,date,recommendation,confidence,rsi,macd_signal,sentiment_score,sentiment_label,top_headlines,reasoning
+PETR4,2026-06-24,AGUARDAR,0.5,28.93,bearish,0.0431,NEGATIVO,"['Ibovespa recua pressionado por Petrobras (PETR4); dólar avança a R$ 5,20 — O Ibovespa (IBOV) recuou com a baixa do petróleo pressionando empresas de peso no índice, como a Pet...']","RSI em 28.9 (sobrevenda). MACD bearish. Sentimento (score: 0.04). Sinais altistas: 2, baixistas: 2."

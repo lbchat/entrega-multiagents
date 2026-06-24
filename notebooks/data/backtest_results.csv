@@ -167,6 +167,7 @@ date,ticker,recommendation,confidence,rsi,macd_signal,sentiment_score,sentiment_
 2026-05-25,VALE3,COMPRAR,1.0,52.06,bullish,0.5,placeholder,-2.261,-2.9099,True
 2026-05-25,BBAS3,COMPRAR,1.0,37.78,bullish,0.5,placeholder,-7.2517,-2.9099,False
 2026-05-25,ITUB4,AGUARDAR,0.5,35.65,bearish,0.5,placeholder,-2.3366,-2.9099,True
+2026-05-26,PETR4,AGUARDAR,0.5,37.66,bearish,0.5,placeholder,-2.695,-1.354,False
 2026-05-26,VALE3,COMPRAR,1.0,52.02,bullish,0.5,placeholder,2.3233,-1.354,True
 2026-05-26,BBAS3,COMPRAR,1.0,46.69,bullish,0.5,placeholder,-5.1117,-1.354,False
 2026-05-26,ITUB4,AGUARDAR,0.5,42.57,bearish,0.5,placeholder,-1.2033,-1.354,True
