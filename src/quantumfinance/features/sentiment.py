@@ -6,6 +6,7 @@ import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 MODEL_NAME = "lucas-leme/FinBERT-PT-BR"
+HEADLINE_SUMMARY_EXCERPT_LENGTH = 100  # tamanho do trecho do resumo anexado à manchete
 
 
 @lru_cache(maxsize=1)
@@ -36,6 +37,21 @@ def classify_sentiment(text: str) -> dict:
         "scores": scores,
         "confidence": round(float(torch.max(probs)), 4),
     }
+
+
+def _format_headline(item: dict) -> str:
+    """Anexa um trecho do resumo ao título quando ele agrega informação não visível no título sozinho."""
+    title = item["title"]
+    summary = item.get("summary", "").strip()
+
+    if not summary or summary == title.strip():
+        return title
+
+    excerpt = summary[:HEADLINE_SUMMARY_EXCERPT_LENGTH].rstrip()
+    if len(summary) > HEADLINE_SUMMARY_EXCERPT_LENGTH:
+        excerpt += "..."
+
+    return f"{title} — {excerpt}"
 
 
 def aggregate_sentiment(news_items: list[dict]) -> dict:
@@ -69,7 +85,7 @@ def aggregate_sentiment(news_items: list[dict]) -> dict:
     else:
         sentiment_label = "NEUTRO"
 
-    top_headlines = [c["title"] for c in classified[:3]]
+    top_headlines = [_format_headline(c) for c in classified[:3]]
 
     return {
         "sentiment_score": sentiment_score,

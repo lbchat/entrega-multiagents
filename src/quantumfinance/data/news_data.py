@@ -4,7 +4,7 @@ import feedparser
 
 RSS_FEEDS = [
     "https://www.infomoney.com.br/feed/",
-    "https://valor.globo.com/rss/home/",
+    "https://br.investing.com/rss/news_285.rss",
     "https://www.moneytimes.com.br/feed/",
 ]
 
