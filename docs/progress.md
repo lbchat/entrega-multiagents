@@ -11,7 +11,7 @@
 - [x] **Etapa 4** — Expansão: agente funcionando para VALE3, BBAS3 e ITUB4
 - [x] **Etapa 5** — Interface Gradio: demo conversacional navegável
 - [x] **Etapa 6** — Backtest: simulação histórica + comparação vs. buy-and-hold e Ibovespa
-- [ ] **Etapa 7** — Entrega: README final, diagrama de arquitetura, documentação de limitações
+- [x] **Etapa 7** — Entrega: README final, diagrama de arquitetura (`docs/architecture.md`), notebook de demo end-to-end (`05_demo.ipynb`), limitações honestas e próximos passos documentados
 
 ## Bônus (implementar após Etapa 5, em ordem de prioridade)
 
