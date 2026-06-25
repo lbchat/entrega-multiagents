@@ -13,6 +13,26 @@
 - [x] **Etapa 6** — Backtest: simulação histórica + comparação vs. buy-and-hold e Ibovespa
 - [x] **Etapa 7** — Entrega: README final, diagrama de arquitetura (`docs/architecture.md`), notebook de demo end-to-end (`05_demo.ipynb`), limitações honestas e próximos passos documentados
 
+## Melhorias pós-entrega
+
+> Projeto concluído academicamente (Etapas 0-7). A partir daqui, desenvolvimento pós-entrega.
+
+### Concluído
+- [x] Agente de diagnóstico investigativo
+
+### Em andamento
+- [ ] *(nenhum item em andamento no momento)*
+
+### Backlog
+- [ ] Correção do prompt do MarketAgent para comparações explícitas
+- [ ] Context Router Agent com Asset Context Map
+- [ ] Batch queries no backtest (BigQuery GROUP BY + yfinance bulk)
+- [ ] Integração CVM — Fatos Relevantes históricos por ticker
+- [ ] Integração BCB Focus Report — expectativas macroeconômicas semanais
+- [ ] Alertas automáticos via Telegram + GitHub Actions
+- [ ] Persistência em Azure Blob Storage
+- [ ] Comparador de carteiras por perfil de risco
+
 ## Bônus (implementar após Etapa 5, em ordem de prioridade)
 
 - [ ] Asset Context Map + Context Router Agent
@@ -62,6 +82,7 @@ Agente que recebe um ticker e decide autonomamente quais dimensões contextuais 
 - **Lição aprendida — processo órfão sobrescreveu resultado já validado (Etapa 6.5):** depois de validar `data/backtest_results_gdelt.csv` com 244 linhas e 0% de fallback neutro, o mesmo arquivo apareceu horas depois com só 60 linhas e 78% de fallback neutro — sem que nada na sessão atual tivesse rodado o script de novo. Causa: um processo Python de uma sessão anterior, ainda executando a implementação antiga (`gdeltdoc`/API REST, janela de 21 dias, fallback agressivo por rate limit), ficou em background sobrevivendo à reescrita de `gdelt_client.py` e `run_backtest_gdelt.py` — o processo já tinha o módulo antigo carregado em memória, então as edições nos arquivos-fonte não o afetaram — e só terminou (sobrescrevendo o CSV) bem depois da validação ter sido confirmada como correta. **Lição:** um arquivo de output só é confiável no instante em que foi lido; se um script de longa duração pode estar rodando de uma sessão anterior, checar processos ativos antes de seguir adiante (`Get-CimInstance Win32_Process -Filter "Name='python.exe'"` no PowerShell) — e, ao reescrever um módulo, lembrar que processos já em execução continuam com a versão antiga em memória até serem reiniciados. Resolvido confirmando que não havia mais processos rodando e reexecutando o script atual para regenerar o CSV correto.
 - **Feed RSS do Valor Econômico substituído (pré-Etapa 7):** `https://valor.globo.com/rss/home/` (em `RSS_FEEDS`, `news_data.py`) retornava 0 itens — `feedparser` não lançava erro, só voltava vazio (na verdade HTTP 400, resposta era HTML, não XML). Testadas as 3 alternativas do próprio Valor (`/rss/`, `/financas/rss`, `/empresas/rss`) — todas também quebradas (404, ou redirecionam para a página genérica de erro do Globo.com). Substituído por `https://br.investing.com/rss/news_285.rss`: mesmo domínio sugerido como fallback (`br.investing.com`), mas usando uma categoria de notícias específica do mercado brasileiro (Selic, dólar, tickers da B3) em vez do feed genérico `/rss/news.rss` (que retorna notícia de insider trading de empresas dos EUA, sem relevância para os tickers rastreados). RSS é volátil por natureza — o pipeline já trata a ausência de notícias relevantes no momento da consulta com o fallback neutro (`sentiment_score=0.5`, `news_count=0`), então a troca não precisa garantir match imediato a cada consulta, só aumentar a chance de cobertura real ao longo do tempo (antes, o feed do Valor nunca contribuía nenhum item, em nenhuma consulta).
 - **Manchetes agora mostram o trecho do resumo que justifica o match (pré-Etapa 7):** `fetch_news` casa as keywords contra título+resumo combinados (`TICKER_KEYWORDS`, `news_data.py`), mas `top_headlines` (`aggregate_sentiment`, `sentiment.py`) só exibia o título — então a manchete mostrada ao usuário às vezes parecia não relacionada ao ticker, quando na verdade o termo que deu o match estava no resumo. Corrigido com `_format_headline()`: quando o resumo existe e é diferente do título, anexa um trecho de até `HEADLINE_SUMMARY_EXCERPT_LENGTH=100` caracteres no formato `"Título — trecho..."`. Contrato do campo no CSV não muda (continua `list[str]`), só o conteúdo de cada string.
+- **Agente de diagnóstico investigativo (pós-entrega):** novo `diagnostic_node` em `orchestrator.py`, com `DiagnosticAgent` (`agents/diagnostic_agent.py`) ReAct genuíno com acesso às 3 tools do sistema (`get_market_features`, `get_sentiment_features`, `generate_recommendation`), roteado quando a pergunta é aberta/investigativa. Roteador (`ROUTER_PROMPT`) expandido de 3 para 4 categorias. `generate_recommendation` fica disponível como mais uma fonte de dados para a investigação, mas o prompt proíbe explicitamente emitir recomendação formal como conclusão — o papel do agente é explicar, não recomendar. Validado com "Por que VALE3 está caindo nos últimos dias?": o agente chamou `get_market_features` e `get_sentiment_features` em sequência antes de concluir, sintetizando os dois em uma análise única — ReAct multi-tool genuíno, não pipeline fixo. Os 3 roteamentos existentes (`market_node`, `sentiment_node`, `pipeline_market`) continuam funcionando sem regressão (20/20 testes).
 
 ## Melhorias antes da Etapa 7
 

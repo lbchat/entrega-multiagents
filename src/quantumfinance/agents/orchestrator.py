@@ -6,6 +6,7 @@ from langchain_core.messages import HumanMessage
 from langgraph.graph import END, START, MessagesState, StateGraph
 
 from quantumfinance.agents.decision_agent import build_decision_agent
+from quantumfinance.agents.diagnostic_agent import build_diagnostic_agent
 from quantumfinance.agents.market_agent import build_market_agent
 from quantumfinance.agents.sentiment_agent import build_sentiment_agent
 from quantumfinance.config import get_llm
@@ -18,9 +19,10 @@ from quantumfinance.universe import MVP_TICKER, TICKERS
 ROUTER_PROMPT = """Você é o roteador do sistema QuantumFinance.
 Analise a pergunta do usuário e classifique em uma das categorias:
 - "recommendation": usuário quer recomendação completa (COMPRAR/VENDER/AGUARDAR)
-- "market": usuário quer apenas dados técnicos ou indicadores
-- "sentiment": usuário quer apenas sentimento ou notícias
-Responda APENAS com uma dessas três palavras, sem explicação."""
+- "market": usuário quer só indicadores técnicos de um ticker
+- "sentiment": usuário quer só sentimento/notícias de um ticker
+- "diagnostic": usuário quer entender/explicar comportamento, comparar ativos, ou fazer pergunta aberta sobre o mercado
+Responda APENAS com uma dessas quatro palavras, sem explicação."""
 
 
 class PipelineState(MessagesState):
@@ -46,9 +48,12 @@ def build_graph():
     market_agent = build_market_agent()
     sentiment_agent = build_sentiment_agent()
     decision_agent = build_decision_agent()
+    diagnostic_agent = build_diagnostic_agent()
     llm = get_llm()
 
-    def route_intent(state: PipelineState) -> Literal["market_node", "sentiment_node", "pipeline_market"]:
+    def route_intent(
+        state: PipelineState,
+    ) -> Literal["market_node", "sentiment_node", "diagnostic_node", "pipeline_market"]:
         """Classifica a intenção da pergunta e roteia para o nó correto."""
         last_message = state["messages"][-1].content
         response = llm.invoke([
@@ -61,6 +66,8 @@ def build_graph():
             return "market_node"
         elif intent == "sentiment":
             return "sentiment_node"
+        elif intent == "diagnostic":
+            return "diagnostic_node"
         else:
             return "pipeline_market"  # padrão: pipeline completo
 
@@ -72,6 +79,11 @@ def build_graph():
     def sentiment_node(state: PipelineState) -> dict:
         """Nó do SentimentAgent — responde perguntas pontuais sobre sentimento."""
         response = sentiment_agent.invoke(state)
+        return {"messages": response["messages"]}
+
+    def diagnostic_node(state: PipelineState) -> dict:
+        """Nó do DiagnosticAgent — investiga perguntas abertas com ReAct genuíno, sem pipeline fixo."""
+        response = diagnostic_agent.invoke(state)
         return {"messages": response["messages"]}
 
     def pipeline_market(state: PipelineState) -> dict:
@@ -110,6 +122,7 @@ def build_graph():
 
     graph.add_node("market_node", market_node)
     graph.add_node("sentiment_node", sentiment_node)
+    graph.add_node("diagnostic_node", diagnostic_node)
     graph.add_node("pipeline_market", pipeline_market)
     graph.add_node("pipeline_sentiment", pipeline_sentiment)
     graph.add_node("pipeline_decision", pipeline_decision)
@@ -120,12 +133,14 @@ def build_graph():
         {
             "market_node": "market_node",
             "sentiment_node": "sentiment_node",
+            "diagnostic_node": "diagnostic_node",
             "pipeline_market": "pipeline_market",
         }
     )
 
     graph.add_edge("market_node", END)
     graph.add_edge("sentiment_node", END)
+    graph.add_edge("diagnostic_node", END)
     graph.add_edge("pipeline_market", "pipeline_sentiment")
     graph.add_edge("pipeline_sentiment", "pipeline_decision")
     graph.add_edge("pipeline_decision", END)
