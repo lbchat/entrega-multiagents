@@ -19,12 +19,12 @@
 
 ### Concluído
 - [x] Agente de diagnóstico investigativo
+- [x] Correção do prompt do MarketAgent para comparações explícitas
 
 ### Em andamento
 - [ ] *(nenhum item em andamento no momento)*
 
 ### Backlog
-- [ ] Correção do prompt do MarketAgent para comparações explícitas
 - [ ] Context Router Agent com Asset Context Map
 - [ ] Batch queries no backtest (BigQuery GROUP BY + yfinance bulk)
 - [ ] Integração CVM — Fatos Relevantes históricos por ticker
@@ -87,4 +87,4 @@ Agente que recebe um ticker e decide autonomamente quais dimensões contextuais 
 ## Melhorias antes da Etapa 7
 
 - **Performance do backtest (Etapa 6.5, pós-migração BigQuery):** `fetch_gdelt_sentiment` (`gdelt_client.py`) faz uma query BigQuery por combinação ticker/dia — 243 chamadas para 90 dias × 4 tickers, ~25min de execução. `get_historical_features`/`get_forward_return` (`targets.py`) seguem o mesmo padrão com `yf.download`, uma chamada por dia/ticker. Os dois poderiam virar chamadas em lote: uma única query BigQuery com `GROUP BY ticker, date` cobrindo todo o período de uma vez, e um único `yf.download` por ticker buscando a janela completa e filtrando localmente — eliminando a maior parte dos round-trips de rede. Não implementado nesta etapa porque o tempo atual (~25min) já está dentro do aceitável ("minutos, não horas"); vale revisitar se o backtest crescer (mais tickers, período maior, ou execução recorrente).
-- Pergunta comparativa pedindo explicação/resumo (ex: "Compare os indicadores de ITUB4 e BBAS3, fornecendo não só os indicadores mas também uma breve explicação resumindo o que for mais relevante") é roteada para `market_node`, que chama `get_market_features` corretamente para os dois tickers, mas o prompt do `MarketAgent` proíbe explicitamente qualquer interpretação/resumo — então ele coleta os dados e devolve uma mensagem genérica ("Dados coletados. Outra etapa do sistema será responsável pela análise comparativa e resumo.") em vez de responder à parte comparativa/explicativa do pedido. Limitação do prompt atual, não da arquitetura. Correção possível: relaxar o prompt do `MarketAgent` para permitir comparação/resumo quando pedido explicitamente, ou criar um nó específico de comparação no orquestrador. Encontrado em teste manual do usuário.
+- **Prompt do MarketAgent corrigido para comparações explícitas (pós-entrega):** pergunta comparativa pedindo explicação/resumo (ex: "Compare os indicadores de ITUB4 e BBAS3, fornecendo não só os indicadores mas também uma breve explicação resumindo o que for mais relevante") era roteada para `market_node`, que chamava `get_market_features` corretamente para os dois tickers, mas o prompt do `MarketAgent` proibia explicitamente qualquer interpretação/resumo — então coletava os dados e devolvia uma mensagem genérica ("Dados coletados. Outra etapa do sistema será responsável pela análise comparativa e resumo.") em vez de responder à parte comparativa/explicativa do pedido. **Corrigido** em `market_agent.py`: adicionado parágrafo ao prompt autorizando explicitamente comparação estruturada entre tickers (mantendo a proibição de recomendação formal). Validado com "Compare os indicadores técnicos de ITUB4 e BBAS3, destacando o que for mais relevante" — resposta agora compara RSI, MACD, médias móveis e Bandas de Bollinger dos dois tickers com dados reais, sem recomendação formal.
