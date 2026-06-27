@@ -1,0 +1,43 @@
+PETR4:
+  aliases: ["Petrobras", "PETR4", "Petróleo Brasileiro"]
+  spheres:
+    energy:
+      keywords: ["petróleo", "Brent", "WTI", "OPEP", "refinaria", "pré-sal", "óleo e gás"]
+    politics_regulation:
+      keywords: ["política de preços", "intervenção estatal", "governo Petrobras", "ANP"]
+    geopolitics:
+      keywords: ["OPEP+", "guerra", "sanções", "exportação de petróleo", "geopolítica"]
+    labor_social:
+      keywords: ["greve petroleiros", "caminhoneiros", "sindicato"]
+
+VALE3:
+  aliases: ["Vale", "VALE3", "Vale S.A."]
+  spheres:
+    mining_commodities:
+      keywords: ["minério de ferro", "iron ore", "níquel", "cobre", "Carajás", "pelotas"]
+    china_demand:
+      keywords: ["China", "demanda chinesa", "aço", "siderurgia", "construção China"]
+    environmental:
+      keywords: ["barragem", "Brumadinho", "Mariana", "licenciamento", "ESG", "Samarco"]
+    macro:
+      keywords: ["commodities", "preço do minério", "Dalian", "futuros minério"]
+
+BBAS3:
+  aliases: ["Banco do Brasil", "BBAS3", "BB Seguridade"]
+  spheres:
+    credit_agro:
+      keywords: ["crédito rural", "agronegócio", "Plano Safra", "financiamento agrícola"]
+    fiscal_policy:
+      keywords: ["governo Banco do Brasil", "banco estatal", "política fiscal", "Selic"]
+    banking:
+      keywords: ["spread bancário", "inadimplência", "ROE", "margem financeira", "PDD"]
+
+ITUB4:
+  aliases: ["Itaú", "ITUB4", "Itaú Unibanco", "Itaúsa"]
+  spheres:
+    credit_consumer:
+      keywords: ["crédito pessoa física", "cartão de crédito", "financiamento", "consignado"]
+    macro_rates:
+      keywords: ["Selic", "juros", "spread bancário", "inadimplência", "crédito"]
+    digital_competition:
+      keywords: ["banco digital", "fintechs", "Pix", "concorrência bancária"]

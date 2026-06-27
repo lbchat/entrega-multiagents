@@ -5,6 +5,7 @@ from typing import Literal, Optional
 from langchain_core.messages import HumanMessage
 from langgraph.graph import END, START, MessagesState, StateGraph
 
+from quantumfinance.agents.context_router_agent import build_context_router_agent
 from quantumfinance.agents.decision_agent import build_decision_agent
 from quantumfinance.agents.diagnostic_agent import build_diagnostic_agent
 from quantumfinance.agents.market_agent import build_market_agent
@@ -22,7 +23,8 @@ Analise a pergunta do usuário e classifique em uma das categorias:
 - "market": usuário quer só indicadores técnicos de um ticker
 - "sentiment": usuário quer só sentimento/notícias de um ticker
 - "diagnostic": usuário quer entender/explicar comportamento, comparar ativos, ou fazer pergunta aberta sobre o mercado
-Responda APENAS com uma dessas quatro palavras, sem explicação."""
+- "context": usuário pede análise contextual, de esferas temáticas, ou pergunta sobre fatores externos que afetam o ativo
+Responda APENAS com uma dessas cinco palavras, sem explicação."""
 
 
 class PipelineState(MessagesState):
@@ -53,7 +55,7 @@ def build_graph():
 
     def route_intent(
         state: PipelineState,
-    ) -> Literal["market_node", "sentiment_node", "diagnostic_node", "pipeline_market"]:
+    ) -> Literal["market_node", "sentiment_node", "diagnostic_node", "context_node", "pipeline_market"]:
         """Classifica a intenção da pergunta e roteia para o nó correto."""
         last_message = state["messages"][-1].content
         response = llm.invoke([
@@ -68,6 +70,8 @@ def build_graph():
             return "sentiment_node"
         elif intent == "diagnostic":
             return "diagnostic_node"
+        elif intent == "context":
+            return "context_node"
         else:
             return "pipeline_market"  # padrão: pipeline completo
 
@@ -84,6 +88,19 @@ def build_graph():
     def diagnostic_node(state: PipelineState) -> dict:
         """Nó do DiagnosticAgent — investiga perguntas abertas com ReAct genuíno, sem pipeline fixo."""
         response = diagnostic_agent.invoke(state)
+        return {"messages": response["messages"]}
+
+    def context_node(state: PipelineState) -> dict:
+        """Nó do ContextRouterAgent — analisa esferas temáticas do ativo via Asset Context Map.
+
+        O agente é construído por requisição (não uma vez só, como os demais) porque
+        seu prompt depende do ticker — precisa injetar as esferas reais do Asset Context
+        Map antes de invocar o ReAct, para que o agente cite as esferas corretas mesmo
+        quando não há cobertura de notícias no momento.
+        """
+        ticker = extract_ticker(str(state["messages"][-1].content))
+        context_router_agent = build_context_router_agent(ticker)
+        response = context_router_agent.invoke(state)
         return {"messages": response["messages"]}
 
     def pipeline_market(state: PipelineState) -> dict:
@@ -123,6 +140,7 @@ def build_graph():
     graph.add_node("market_node", market_node)
     graph.add_node("sentiment_node", sentiment_node)
     graph.add_node("diagnostic_node", diagnostic_node)
+    graph.add_node("context_node", context_node)
     graph.add_node("pipeline_market", pipeline_market)
     graph.add_node("pipeline_sentiment", pipeline_sentiment)
     graph.add_node("pipeline_decision", pipeline_decision)
@@ -134,6 +152,7 @@ def build_graph():
             "market_node": "market_node",
             "sentiment_node": "sentiment_node",
             "diagnostic_node": "diagnostic_node",
+            "context_node": "context_node",
             "pipeline_market": "pipeline_market",
         }
     )
@@ -141,6 +160,7 @@ def build_graph():
     graph.add_edge("market_node", END)
     graph.add_edge("sentiment_node", END)
     graph.add_edge("diagnostic_node", END)
+    graph.add_edge("context_node", END)
     graph.add_edge("pipeline_market", "pipeline_sentiment")
     graph.add_edge("pipeline_sentiment", "pipeline_decision")
     graph.add_edge("pipeline_decision", END)
